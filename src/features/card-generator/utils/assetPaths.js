@@ -10,11 +10,11 @@ const getAssetBasePath = () => {
   // Determine the base path based on environment
   let basePath;
   if (isGitHubPages) {
-    basePath = '/chaotic-react';
+    basePath = '/chaotic-tcg-proxy-generator';
   } else if (isDevelopment) {
-    basePath = '/chaotic-react';  // Changed this to match GitHub Pages path
+    basePath = '/chaotic-tcg-proxy-generator';  // Changed this to match GitHub Pages path
   } else {
-    basePath = '/chaotic-react';  // Default to same path
+    basePath = '/chaotic-tcg-proxy-generator';  // Default to same path
   }
   
   return basePath;

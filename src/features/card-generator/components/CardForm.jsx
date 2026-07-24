@@ -877,7 +877,7 @@ const generateRandomStats = (maxStats) => {
           await new Promise((resolve, reject) => {
             img.onload = resolve;
             img.onerror = reject;
-            img.src = path ?? `/chaotic-react/img/icons/${element}.png`;
+            img.src = path ?? `/chaotic-tcg-proxy-generator/img/icons/${element}.png`;
           });
           loadedImages[element] = true;
         } catch (error) {
