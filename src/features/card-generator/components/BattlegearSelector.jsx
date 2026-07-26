@@ -90,17 +90,10 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
     };
   }, []);
 
-  // Get a flattened list of selectable battlegear
-  const getSelectableBattlegear = () => {
-    return filteredBattlegear;
-  };
-
   // Special key handler with focus lock
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
       if (!isDropdownOpen) return;
-      
-      const selectableBattlegear = getSelectableBattlegear();
       
       if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
         e.preventDefault();
@@ -109,10 +102,10 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
         switch (e.key) {
           case 'ArrowDown':
             setSelectedIndex(prevIndex => {
-              if (prevIndex < selectableBattlegear.length - 1) {
+              if (prevIndex < filteredBattlegear.length - 1) {
                 // Move selection down
                 const newIndex = prevIndex + 1;
-                scrollToIndex(newIndex, selectableBattlegear);
+                scrollToIndex(newIndex, filteredBattlegear);
                 return newIndex;
               }
               return prevIndex;
@@ -124,7 +117,7 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
               if (prevIndex > 0) {
                 // Move selection up
                 const newIndex = prevIndex - 1;
-                scrollToIndex(newIndex, selectableBattlegear);
+                scrollToIndex(newIndex, filteredBattlegear);
                 return newIndex;
               }
               return prevIndex;
@@ -132,9 +125,9 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
             break;
             
           case 'Enter':
-            if (selectedIndex >= 0 && selectedIndex < selectableBattlegear.length) {
+            if (selectedIndex >= 0 && selectedIndex < filteredBattlegear.length) {
               // Select the highlighted battlegear
-              handleBattlegearSelection(selectableBattlegear[selectedIndex].id);
+              handleBattlegearSelection(filteredBattlegear[selectedIndex].id);
             }
             break;
             
@@ -142,6 +135,9 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
             // Close the dropdown
             setIsDropdownOpen(false);
             setSelectedIndex(-1);
+            break;
+
+          default:
             break;
         }
       }
@@ -160,8 +156,7 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
     // Initialize dropdown state with first item selected
   useEffect(() => {
     if (isDropdownOpen && selectedIndex === -1) {
-      const selectableBattlegear = getSelectableBattlegear();
-      if (selectableBattlegear.length > 0) {
+      if (filteredBattlegear.length > 0) {
         setSelectedIndex(0);
       }
     }
@@ -193,8 +188,7 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
   const handleInputFocus = () => {
     // Don't auto-open, but prepare for keyboard navigation
     if (isDropdownOpen) {
-      const selectableBattlegear = getSelectableBattlegear();
-      if (selectableBattlegear.length > 0 && selectedIndex === -1) {
+      if (filteredBattlegear.length > 0 && selectedIndex === -1) {
         setSelectedIndex(0);
       }
     }
@@ -203,9 +197,7 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
   // Helper to find if a battlegear is currently selected
   const isSelected = (battlegear) => {
     if (selectedIndex === -1) return false;
-    
-    const selectableBattlegear = getSelectableBattlegear();
-    return selectableBattlegear[selectedIndex]?.id === battlegear.id;
+    return filteredBattlegear[selectedIndex]?.id === battlegear.id;
   };
 
   // Combined input click and focus handler
@@ -220,7 +212,7 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
         <div className="flex justify-between items-center">
           <label className="text-white font-bold">Select Battlegear</label>
           <span className="text-xs text-gray-400">
-            {getSelectableBattlegear().length} battlegear available
+            {filteredBattlegear.length} battlegear available
           </span>
         </div>
         
@@ -228,6 +220,8 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
           <input
             ref={inputRef}
             type="text"
+            role="combobox"
+            aria-controls="battlegear-listbox"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onClick={handleInputClick}
@@ -257,6 +251,7 @@ const BattlegearSelector = memo(({ onSelectBattlegear }) => {
           {isDropdownOpen && (
             <div 
               ref={listRef}
+              id="battlegear-listbox"
               className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded shadow-lg max-h-80 overflow-y-auto"
               role="listbox"
               tabIndex="-1"

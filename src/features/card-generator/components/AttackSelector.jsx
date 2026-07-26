@@ -90,17 +90,12 @@ const AttackSelector = memo(({ onSelectAttack }) => {
     };
   }, []);
 
-  // Get a flattened list of selectable attacks
-  const getSelectableAttacks = () => {
-    return filteredAttacks;
-  };
-
   // Special key handler with focus lock
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
       if (!isDropdownOpen) return;
       
-      const selectableAttacks = getSelectableAttacks();
+      const selectableAttacks = filteredAttacks;
       
       if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
         e.preventDefault();
@@ -143,6 +138,8 @@ const AttackSelector = memo(({ onSelectAttack }) => {
             setIsDropdownOpen(false);
             setSelectedIndex(-1);
             break;
+          default:
+            break;
         }
       }
     };
@@ -159,11 +156,8 @@ const AttackSelector = memo(({ onSelectAttack }) => {
 
   // Initialize dropdown state with first item selected
   useEffect(() => {
-    if (isDropdownOpen && selectedIndex === -1) {
-      const selectableAttacks = getSelectableAttacks();
-      if (selectableAttacks.length > 0) {
-        setSelectedIndex(0);
-      }
+    if (isDropdownOpen && selectedIndex === -1 && filteredAttacks.length > 0) {
+      setSelectedIndex(0);
     }
   }, [isDropdownOpen, selectedIndex, filteredAttacks]);
 
@@ -189,20 +183,15 @@ const AttackSelector = memo(({ onSelectAttack }) => {
   // Add focus handler for accessibility
   const handleInputFocus = () => {
     // Don't auto-open, but prepare for keyboard navigation
-    if (isDropdownOpen) {
-      const selectableAttacks = getSelectableAttacks();
-      if (selectableAttacks.length > 0 && selectedIndex === -1) {
-        setSelectedIndex(0);
-      }
+    if (isDropdownOpen && filteredAttacks.length > 0 && selectedIndex === -1) {
+      setSelectedIndex(0);
     }
   };
 
   // Helper to find if an attack is currently selected
   const isSelected = (attack) => {
     if (selectedIndex === -1) return false;
-    
-    const selectableAttacks = getSelectableAttacks();
-    return selectableAttacks[selectedIndex]?.id === attack.id;
+    return filteredAttacks[selectedIndex]?.id === attack.id;
   };
 
   // Combined input click and focus handler
@@ -217,7 +206,7 @@ const AttackSelector = memo(({ onSelectAttack }) => {
         <div className="flex justify-between items-center">
           <label className="text-white font-bold">Select Attack</label>
           <span className="text-xs text-gray-400">
-            {getSelectableAttacks().length} attacks available
+            {filteredAttacks.length} attacks available
           </span>
         </div>
         
@@ -241,7 +230,10 @@ const AttackSelector = memo(({ onSelectAttack }) => {
             placeholder="Search attacks..."
             className="w-full p-2 border border-gray-700 rounded bg-black text-white focus:border-[#9FE240] focus:outline-none pl-8"
             autoComplete="off"
+            role="combobox"
             aria-expanded={isDropdownOpen}
+            aria-controls="attack-selector-listbox"
+            aria-autocomplete="list"
           />
           
           {/* Search icon */}
@@ -253,6 +245,7 @@ const AttackSelector = memo(({ onSelectAttack }) => {
           
           {isDropdownOpen && (
             <div 
+              id="attack-selector-listbox"
               ref={listRef}
               className="absolute z-50 w-full mt-1 bg-gray-900 border border-gray-700 rounded shadow-lg max-h-80 overflow-y-auto"
               role="listbox"

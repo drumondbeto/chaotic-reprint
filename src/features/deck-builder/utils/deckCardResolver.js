@@ -14,12 +14,8 @@ export function sanitizeText(text) {
     .toLowerCase()                             // 1. Convert to lowercase
     .normalize("NFD")                          // 2. Separate accents from letters
     .replace(/[\u0300-\u036f]/g, "")           // 3. Remove accents
-    .replace(/[\s,\-]/g, "")                   // 4. Remove spaces (\s), commas (,) and hyphens (-)
+    .replace(/[\s,-]/g, "")                    // 4. Remove spaces (\s), commas (,) and hyphens (-)
     .replace(/[']/g, "");                      // 5. Remove apostrophes (')
-}
-
-function withId(card, fallbackName, fallbackSet) {
-  return card.id || `${fallbackName}__${fallbackSet || 'unknown'}`;
 }
 
 // Pre-built lookup: EN creature name → raw PT entry (has name_pt, subname_pt)

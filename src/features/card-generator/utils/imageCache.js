@@ -88,9 +88,11 @@ export const clearImageCache = () => {
   imageCache.clear();
 };
 
-export default {
+const imageCacheUtils = {
   loadAndCacheImage,
   urlToFile,
   getCacheStats,
   clearImageCache
 };
+
+export default imageCacheUtils;
