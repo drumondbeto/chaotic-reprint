@@ -35,7 +35,7 @@ const DeckCardSearchAdd = ({ type, locale, onAdd }) => {
   }, []);
 
   const handleSelect = (card) => {
-    onAdd(card, quantity);
+    onAdd({ ...card, id: card.id || card.id }, quantity);
     setSearchTerm('');
     setIsOpen(false);
     setQuantity(1);
@@ -58,7 +58,7 @@ const DeckCardSearchAdd = ({ type, locale, onAdd }) => {
         {isOpen && filteredCards.length > 0 && (
           <ul className="absolute z-10 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-black border border-gray-700 rounded shadow-lg">
             {filteredCards.slice(0, 50).map((card) => (
-              <li key={card.uniqueId}>
+              <li key={card.id || card.id}>
                 <button
                   type="button"
                   onClick={() => handleSelect(card)}

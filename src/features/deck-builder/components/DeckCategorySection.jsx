@@ -27,7 +27,7 @@ const DeckCategorySection = ({ type, locale, cards, onAddCard, onChangeQuantity,
       {cards.length > 0 && (
         <ul className="mt-3 divide-y divide-gray-800">
           {cards.map((card) => (
-            <li key={card.uniqueId} className="flex items-center justify-between py-2 gap-2">
+            <li key={card.id} className="flex items-center justify-between py-2 gap-2">
               <span className="text-sm text-white truncate">
                 {card.name}
                 {card.subname ? `, ${card.subname}` : ''}
@@ -36,7 +36,7 @@ const DeckCategorySection = ({ type, locale, cards, onAddCard, onChangeQuantity,
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => onChangeQuantity(type, card.uniqueId, card.quantity - 1)}
+                  onClick={() => onChangeQuantity(type, card.id, card.quantity - 1)}
                   className="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-white"
                   aria-label={locale === 'pt' ? 'Diminuir quantidade' : 'Decrease quantity'}
                 >
@@ -45,7 +45,7 @@ const DeckCategorySection = ({ type, locale, cards, onAddCard, onChangeQuantity,
                 <span className="text-white w-6 text-center">{card.quantity}</span>
                 <button
                   type="button"
-                  onClick={() => onChangeQuantity(type, card.uniqueId, card.quantity + 1)}
+                  onClick={() => onChangeQuantity(type, card.id, card.quantity + 1)}
                   className="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-white"
                   aria-label={locale === 'pt' ? 'Aumentar quantidade' : 'Increase quantity'}
                 >
@@ -53,7 +53,7 @@ const DeckCategorySection = ({ type, locale, cards, onAddCard, onChangeQuantity,
                 </button>
                 <button
                   type="button"
-                  onClick={() => onRemoveCard(type, card.uniqueId)}
+                  onClick={() => onRemoveCard(type, card.id)}
                   className="px-2 py-0.5 rounded bg-red-900 hover:bg-red-800 text-white"
                   aria-label={locale === 'pt' ? 'Remover carta' : 'Remove card'}
                 >
