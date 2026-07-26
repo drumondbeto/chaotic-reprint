@@ -96,7 +96,7 @@ export class BatchCardGenerator {
       serialNumber: cardEntry.serialNumber || cardEntry.id || '',
       showCopyright: true,
       showArtist: true,
-      useBleedTemplates: true
+      useBleedTemplates: false
     };
 
     // Create the card canvas

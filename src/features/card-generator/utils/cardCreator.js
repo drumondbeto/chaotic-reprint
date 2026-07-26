@@ -1312,7 +1312,7 @@ async function loadAsset(key, path) {
 }
 
 async function drawCard(cardData, assets) {
-    const useBleed = cardData.useBleedTemplates !== undefined ? cardData.useBleedTemplates : true;
+    const useBleed = cardData.useBleedTemplates !== undefined ? cardData.useBleedTemplates : false;
 
     // FIXED: All card types use the same orientation (250x350)
     const templateWidth = 250;
