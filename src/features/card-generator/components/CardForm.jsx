@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocale } from '../../../app/LocaleContext';
 import CardPreview from './CardPreview';
 import { CardCreator } from '../utils/cardCreator';
 import { getAssetPath } from '../utils/assetPaths';
 import FormattingToolbar from './FormattingToolbar';
 import CreatureSelector from './CreatureSelector';
 import { getCreatureById } from '../data/CreatureDatabase';
-import { urlToFile, loadAndCacheImage } from '../utils/imageCache';
+import { urlToFile } from '../utils/imageCache';
 import AttackSelector from './AttackSelector';
 import BattlegearSelector from './BattlegearSelector';
 import MugicSelector from './MugicSelector';
@@ -13,17 +14,16 @@ import LocationSelector from './LocationSelector';
 import PhotoshopColorPicker from './PhotoshopColorPicker';
 import CustomTribeLogoUploader from './CustomTribeLogoUploader';
 import CardArtPositioner from './CardArtPositioner';
-import React, { useCallback, useMemo } from 'react';
+import React from 'react';
 import MugicNotesEditor from './MugicNotesEditor';
 import MixedTribeSelector from './MixedTribeSelector';
 import InitiativeInput from './InitiativeInput';
 import { BatchCardGenerator } from './BatchCardGenerator';
 import { getAllLocations, getAllCreatures, getAllAttacks, getAllBattlegear, getAllMugic, filterCreaturesByTribe } from '../utils/batchHelpers';
-import { useLocale } from '../../../app/LocaleContext';
 
 const generateRandomMugicNotes = () => {
   const NOTES = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-  const LENGTHS = [1, 2, 3, 4];
+  const LENGTHS = [1, 2, 3, 4]; 
   
   return Array(7).fill().map(() => {
     const letter = NOTES[Math.floor(Math.random() * NOTES.length)];
@@ -41,26 +41,26 @@ const generateRandomMugicNotes = () => {
   });
 };
 
-const CARD_SYMBOLS = [
+const getCardSymbols = (locale) => [
   // Ability elements
-  { code: ':fire:', label: 'Fire', icon: getAssetPath('img/icons/abilityfire.png') },
-  { code: ':air:', label: 'Air', icon: getAssetPath('img/icons/abilityair.png') },
-  { code: ':earth:', label: 'Earth', icon: getAssetPath('img/icons/abilityearth.png') },
-  { code: ':water:', label: 'Water', icon: getAssetPath('img/icons/abilitywater.png') },
+  { code: ':fire:', label: locale === 'pt' ? 'Fogo' : 'Fire', icon: getAssetPath('img/icons/abilityfire.png') },
+  { code: ':air:', label: locale === 'pt' ? 'Ar' : 'Air', icon: getAssetPath('img/icons/abilityair.png') },
+  { code: ':earth:', label: locale === 'pt' ? 'Terra' : 'Earth', icon: getAssetPath('img/icons/abilityearth.png') },
+  { code: ':water:', label: locale === 'pt' ? 'Água' : 'Water', icon: getAssetPath('img/icons/abilitywater.png') },
 
   // Discipline elements
-  { code: ':courage:', label: 'Courage', icon: getAssetPath('img/icons/courage.png') },
-  { code: ':power:', label: 'Power', icon: getAssetPath('img/icons/power.png') },
-  { code: ':wisdom:', label: 'Wisdom', icon: getAssetPath('img/icons/wisdom.png') },
-  { code: ':speed:', label: 'Speed', icon: getAssetPath('img/icons/speed.png') },  
+  { code: ':courage:', label: locale === 'pt' ? 'Coragem' : 'Courage', icon: getAssetPath('img/icons/courage.png') },
+  { code: ':power:', label: locale === 'pt' ? 'Poder' : 'Power', icon: getAssetPath('img/icons/power.png') },
+  { code: ':wisdom:', label: locale === 'pt' ? 'Sabedoria' : 'Wisdom', icon: getAssetPath('img/icons/wisdom.png') },
+  { code: ':speed:', label: locale === 'pt' ? 'Velocidade' : 'Speed', icon: getAssetPath('img/icons/speed.png') },  
 
   // Tribe elements
-  { code: ':overworld:', label: 'OverWorld', icon: getAssetPath('img/icons/overworld.png') },
-  { code: ':underworld:', label: 'UnderWorld', icon: getAssetPath('img/icons/underworld.png') },
+  { code: ':overworld:', label: locale === 'pt' ? 'OutroMundo' : 'OverWorld', icon: getAssetPath('img/icons/overworld.png') },
+  { code: ':underworld:', label: locale === 'pt' ? 'undo' : 'UnderWorld', icon: getAssetPath('img/icons/underworld.png') },
   { code: ':mipedian:', label: 'Mipedian', icon: getAssetPath('img/icons/mipedian.png') },
   { code: ':danian:', label: 'Danian', icon: getAssetPath('img/icons/danian.png') },
   { code: ':marrillian:', label: 'Marrillian', icon: getAssetPath('img/icons/marrillian.png') },
-  { code: ':past:', label: 'Past', icon: getAssetPath('img/icons/tribeless.png') },
+  { code: ':past:', label: locale === 'pt' ? 'Passado' : 'Past', icon: getAssetPath('img/icons/tribeless.png') },
   { code: ':panivian:', label: 'Panivian', icon: getAssetPath('img/icons/panivian.png') },
   { code: ':umbrian:', label: 'Umbrian', icon: getAssetPath('img/icons/umbrian.png') },
   { code: ':frozen:', label: 'Frozen', icon: getAssetPath('img/icons/frozen.png') },
@@ -112,37 +112,38 @@ const CARD_SYMBOLS = [
   { code: ':frozenmugicX:', label: 'Frozen Mugic X', icon: getAssetPath('img/icons/mugic/frozen_x.png') }
 ];
 
-const SymbolBar = ({ onSymbolSelect }) => {
-  const categories = [
-    {
-      name: "Elements",
-      symbols: CARD_SYMBOLS.slice(0, 4)
-    },
-    {
-      name: "OverWorld",
-      symbols: CARD_SYMBOLS.slice(16, 19)
-    },
-    {
-      name: "UnderWorld",
-      symbols: CARD_SYMBOLS.slice(19, 22)
-    },
-    {
-      name: "Mipedian",
-      symbols: CARD_SYMBOLS.slice(13, 16)
-    },
-    {
-      name: "Danian",
-      symbols: CARD_SYMBOLS.slice(4, 7)
-    },
-    {
-      name: "M'arrillian",
-      symbols: CARD_SYMBOLS.slice(10, 13)
-    },
-    {
-      name: "Generic",
-      symbols: CARD_SYMBOLS.slice(7, 10)
-    }
-  ];
+const SymbolBar = ({ onSymbolSelect, locale }) => {
+  const cardSymbols = getCardSymbols(locale);
+  // const categories = [
+  //   {
+  //     name: "Elements",
+  //     symbols: cardSymbols.slice(0, 4)
+  //   },
+  //   {
+  //     name: "OverWorld",
+  //     symbols: cardSymbols.slice(16, 19)
+  //   },
+  //   {
+  //     name: "UnderWorld",
+  //     symbols: cardSymbols.slice(19, 22)
+  //   },
+  //   {
+  //     name: "Mipedian",
+  //     symbols: cardSymbols.slice(13, 16)
+  //   },
+  //   {
+  //     name: "Danian",
+  //     symbols: cardSymbols.slice(4, 7)
+  //   },
+  //   {
+  //     name: "M'arrillian",
+  //     symbols: cardSymbols.slice(10, 13)
+  //   },
+  //   {
+  //     name: "Generic",
+  //     symbols: cardSymbols.slice(7, 10)
+  //   }
+  // ];
 
   const isMobile = window.innerWidth < 1024;
 
@@ -150,7 +151,7 @@ const SymbolBar = ({ onSymbolSelect }) => {
     return (
       <div className="bg-black rounded-t border-b border-gray-700">
         <div className="flex flex-wrap justify-start gap-1 p-1">
-          {CARD_SYMBOLS.map(({ code, label, icon }) => (
+          {cardSymbols.map(({ code, label, icon }) => (
             <button
               key={code}
               onClick={() => onSymbolSelect(code)}
@@ -172,7 +173,7 @@ const SymbolBar = ({ onSymbolSelect }) => {
   return (
     <div className="bg-black rounded-t border-b border-gray-700">
       <div className="flex flex-wrap justify-center gap-[2px] p-1">
-        {CARD_SYMBOLS.map(({ code, label, icon }) => (
+        {cardSymbols.map(({ code, label, icon }) => (
           <button
             key={code}
             onClick={() => onSymbolSelect(code)}
@@ -199,9 +200,10 @@ const LoadingIndicator = () => (
   </div>
 );
 
-const TextAreaWithSymbols = ({ value, onChange, allowFormatting = true }) => {
+const TextAreaWithSymbols = ({ value, onChange, allowFormatting = true, locale }) => {
   const textareaRef = useRef(null);
-  const [forceUpdate, setForceUpdate] = useState({});
+  // const [forceUpdate, setForceUpdate] = useState({});
+  const cardSymbols = getCardSymbols(locale);
 
   const toggleFormatting = (tag) => {
     const textarea = textareaRef.current;
@@ -300,7 +302,7 @@ const TextAreaWithSymbols = ({ value, onChange, allowFormatting = true }) => {
       
       if (lastColon !== -1) {
         const potentialCode = `:${beforeText.substring(lastColon + 1)}:`;
-        const matchingSymbol = CARD_SYMBOLS.find(symbol => symbol.code === potentialCode);
+        const matchingSymbol = cardSymbols.find(symbol => symbol.code === potentialCode);
         
         if (matchingSymbol) {
           e.preventDefault();
@@ -328,12 +330,12 @@ const TextAreaWithSymbols = ({ value, onChange, allowFormatting = true }) => {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={handleKeyDown}
-      onSelect={() => setForceUpdate({})}
+      // onSelect={() => setForceUpdate({})}
       className="w-full p-2 bg-black text-white h-20 focus:outline-none rounded-t leading-relaxed"
       style={{ letterSpacing: 'normal', whiteSpace: 'pre-wrap' }}
       placeholder="Type : to use symbols (e.g., :fire:) or click icons below to insert"
     />
-      <SymbolBar onSymbolSelect={insertSymbol} />
+      <SymbolBar onSymbolSelect={insertSymbol} locale={locale} />
     </div>
   );
 };
@@ -355,7 +357,7 @@ const generateTicks = (min, max, type) => {
 };
 
 // Round to nearest step
-const roundToStep = (value, step) => Math.round(value / step) * step;
+// const roundToStep = (value, step) => Math.round(value / step) * step;
 
 // Enhanced Number Slider Component with value-based coloring
 const NumberSlider = ({ value, onChange, min = 0, max = 4, step = 1, label, type = 'small', useOrangeColor = false }) => {
@@ -537,7 +539,7 @@ const CardForm = () => {
   const [customColor, setCustomColor] = useState({ h: 0, s: 0.5, l: 0.5 });
   const [brainwashed, setBrainwashed] = useState(false);
   const [isPast, setIsPast] = useState(false);
-  const [showBatchGenerator, setShowBatchGenerator] = useState(false);
+  // const [showBatchGenerator, setShowBatchGenerator] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [brainwashedText, setBrainwashedText] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
@@ -553,9 +555,9 @@ const CardForm = () => {
     speed: 0,
     mugic: 0
   });  
-  const [useBleedTemplates, setUseBleedTemplates] = useState(false);
+  // const [useBleedTemplates, setUseBleedTemplates] = useState(false);
   const [selectedType, setSelectedType] = useState('');
-  const [canvasRef, setCanvasRef] = useState(null);
+  // const [canvasRef, setCanvasRef] = useState(null);
   const [name, setName] = useState('');
   const [subname, setSubname] = useState('');
   const [tribe, setTribe] = useState('');
@@ -571,10 +573,10 @@ const CardForm = () => {
   const [loyal, setLoyal] = useState(false);
   const [loyalRestriction, setLoyalRestriction] = useState('');
   const [initiative, setInitiative] = useState('');
-  const [forceUpdate, setForceUpdate] = useState(false);
+  // const [forceUpdate, setForceUpdate] = useState(false);
   const [useOrangeSliders, setUseOrangeSliders] = useState(false);
   const [artPosition, setArtPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [showArtPositioner, setShowArtPositioner] = useState(true);
+  // const [showArtPositioner, setShowArtPositioner] = useState(true);
   const [mainTribe, setMainTribe] = useState('');
   const [noStats, setNoStats] = useState(false);
   const [batchTribeFilter, setBatchTribeFilter] = useState('all');
@@ -582,22 +584,22 @@ const CardForm = () => {
   const [batchUnofficialsIncluded, setBatchUnofficialsIncluded] = useState(false);
   const [artList, setArtList] = useState([]);
   const [customArt, setCustomArt] = useState(false);
-  const handleArtPositionChange = useCallback((newPosition) => {
-    setArtPosition(newPosition);
-  }, []);  
-  const getContainerDimensions = useMemo(() => {
-    switch (selectedType) {
-      case 'attack':
-      case 'battlegear':
-        return { width: 251, height: 171 };
-      case 'location':
-        return { width: 306, height: 137 };
-      case 'mugic':
-        return { width: 250, height: 350 };
-      default: // creature
-        return { width: 236, height: 198 };
-    }
-  }, [selectedType]);  
+  // const handleArtPositionChange = useCallback((newPosition) => {
+  //   setArtPosition(newPosition);
+  // }, []);  
+  // const getContainerDimensions = useMemo(() => {
+  //   switch (selectedType) {
+  //     case 'attack':
+  //     case 'battlegear':
+  //       return { width: 251, height: 171 };
+  //     case 'location':
+  //       return { width: 306, height: 137 };
+  //     case 'mugic':
+  //       return { width: 250, height: 350 };
+  //     default: // creature
+  //       return { width: 236, height: 198 };
+  //   }
+  // }, [selectedType]);  
   const isMobileBrowser = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   };
@@ -621,8 +623,8 @@ const getFormattedSubtype = (type, tribe, subtype, isPast, mainTribe = '') => {
         
         // Format the secondary tribe
         const formattedSecondary = {
-            'overworld': 'OverWorld',
-            'underworld': 'UnderWorld',
+            'overworld': locale === 'pt' ? 'OutroMundo' : 'OverWorld',
+            'underworld': locale === 'pt' ? 'Submundo' : 'UnderWorld',
             'mipedian': 'Mipedian',
             'danian': 'Danian',
             "m'arrillian": "M'arrillian",
@@ -639,12 +641,12 @@ const getFormattedSubtype = (type, tribe, subtype, isPast, mainTribe = '') => {
     const tribeToFormat = mainTribe || tribe;
 
     const formattedTribe = {
-        'overworld': 'OutroMundo',
-        'underworld': 'UnderWorld',
+        'overworld': locale === 'pt' ? 'OutroMundo' : 'OverWorld',
+        'underworld': locale === 'pt' ? 'Submundo' : 'UnderWorld',
         'mipedian': 'Mipedian',
         'danian': 'Danian',
         "m'arrillian": "M'arrillian",
-        'tribeless': 'Past',
+        'tribeless': locale === 'pt' ? 'Passado' : 'Past',
         'panivian': 'Panivian',
         'umbrian': 'Umbrian',
         'frozen': 'Frozen',
@@ -675,7 +677,7 @@ const getFormattedSubtype = (type, tribe, subtype, isPast, mainTribe = '') => {
     sharp: false, 
     flat: false 
   })));  
-  const [loadedIcons, setLoadedIcons] = useState({});
+  // const [loadedIcons, setLoadedIcons] = useState({});
 const resetForm = () => {
   setName('');
   setSubname('');
@@ -859,9 +861,9 @@ const generateRandomStats = (maxStats) => {
   });
 
   // Function to determine if card type can have legendary/loyal properties
-  const canHaveSpecialProperties = (type) => {
-    return type === 'creature' || type === 'battlegear';
-  };
+  // const canHaveSpecialProperties = (type) => {
+  //   return type === 'creature' || type === 'battlegear';
+  // };
 
   const loadImageFromUrl = async (url) => {
     if (!url) return null;
@@ -885,7 +887,7 @@ const generateRandomStats = (maxStats) => {
           loadedImages[element] = false;
         }
       }
-      setLoadedIcons(loadedImages);
+      // setLoadedIcons(loadedImages);
     };
     preloadIcons();
   }, []);
@@ -900,15 +902,25 @@ const convertInitiativeToSymbol = (initiativeText) => {
   // Only convert values that have actual icons/symbols
   const textToSymbolMap = {
     'fire': ':fire:',
-    'air': ':air:',
+    'fogo': ':fire:',
+    'air': ':air:', 
+    'ar': ':air:',
     'earth': ':earth:',
+    'terra': ':earth:',
     'water': ':water:',
+    'água': ':water:',
     'courage': ':courage:',
+    'coragem': ':courage:',
     'power': ':power:',
+    'poder': ':power:',
     'wisdom': ':wisdom:',
+    'sabedoria': ':wisdom:',
     'speed': ':speed:',
+    'velocidade': ':speed:',
     'overworld': ':overworld:',
+    'outromundo': ':overworld:',
     'underworld': ':underworld:',
+    'submundo': ':underworld:',
     'mipedian': ':mipedian:',
     'danian': ':danian:',
     "m'arrillian": ':marrillian:',
@@ -961,322 +973,322 @@ const handleDownload = () => {
 };
 
 // Final handleBleedDownload with improved mugic card handling
-const handleBleedDownload = async () => {
-  const previewCanvas = document.querySelector('#preview-canvas');
-  if (!previewCanvas) return;
+// const handleBleedDownload = async () => {
+//   const previewCanvas = document.querySelector('#preview-canvas');
+//   if (!previewCanvas) return;
   
-  try {
-    // For mugic cards
-    if (selectedType === 'mugic') {
-      // Create a bleed canvas with exact dimensions
-      const bleedCanvas = document.createElement('canvas');
-      const bleedCtx = bleedCanvas.getContext('2d');
+//   try {
+//     // For mugic cards
+//     if (selectedType === 'mugic') {
+//       // Create a bleed canvas with exact dimensions
+//       const bleedCanvas = document.createElement('canvas');
+//       const bleedCtx = bleedCanvas.getContext('2d');
       
-      // Set standard bleed dimensions
-      bleedCanvas.width = 1092;
-      bleedCanvas.height = 1488;
+//       // Set standard bleed dimensions
+//       bleedCanvas.width = 1092;
+//       bleedCanvas.height = 1488;
       
-      // White background
-      bleedCtx.fillStyle = '#ffffff';
-      bleedCtx.fillRect(0, 0, bleedCanvas.width, bleedCanvas.height);
+//       // White background
+//       bleedCtx.fillStyle = '#ffffff';
+//       bleedCtx.fillRect(0, 0, bleedCanvas.width, bleedCanvas.height);
       
-      // Draw the original art into the background if available
-      if (art) {
-        try {
-          const artImg = new Image();
-          await new Promise(resolve => {
-            artImg.onload = resolve;
-            artImg.src = URL.createObjectURL(art);
-          });
+//       // Draw the original art into the background if available
+//       if (art) {
+//         try {
+//           const artImg = new Image();
+//           await new Promise(resolve => {
+//             artImg.onload = resolve;
+//             artImg.src = URL.createObjectURL(art);
+//           });
           
-          // Calculate scaling to cover the entire canvas
-          const containerAspect = bleedCanvas.width / bleedCanvas.height;
-          const imageAspect = artImg.width / artImg.height;
+//           // Calculate scaling to cover the entire canvas
+//           const containerAspect = bleedCanvas.width / bleedCanvas.height;
+//           const imageAspect = artImg.width / artImg.height;
           
-          let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+//           let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
           
-          if (imageAspect > containerAspect) {
-            drawHeight = bleedCanvas.height;
-            drawWidth = artImg.width * (bleedCanvas.height / artImg.height);
-            offsetX = (bleedCanvas.width - drawWidth) / 2;
-          } else {
-            drawWidth = bleedCanvas.width;
-            drawHeight = artImg.height * (bleedCanvas.width / artImg.width);
-            offsetY = (bleedCanvas.height - drawHeight) / 2;
-          }
+//           if (imageAspect > containerAspect) {
+//             drawHeight = bleedCanvas.height;
+//             drawWidth = artImg.width * (bleedCanvas.height / artImg.height);
+//             offsetX = (bleedCanvas.width - drawWidth) / 2;
+//           } else {
+//             drawWidth = bleedCanvas.width;
+//             drawHeight = artImg.height * (bleedCanvas.width / artImg.width);
+//             offsetY = (bleedCanvas.height - drawHeight) / 2;
+//           }
           
-          // Draw the extended art
-          bleedCtx.drawImage(artImg, offsetX, offsetY, drawWidth, drawHeight);
-          URL.revokeObjectURL(artImg.src);
-        } catch (error) {
-          console.error('Error loading art for mugic bleed:', error);
-        }
-      }
+//           // Draw the extended art
+//           bleedCtx.drawImage(artImg, offsetX, offsetY, drawWidth, drawHeight);
+//           URL.revokeObjectURL(artImg.src);
+//         } catch (error) {
+//           console.error('Error loading art for mugic bleed:', error);
+//         }
+//       }
       
-      // Scale the standard preview canvas to fit the bleed canvas
-      const scaleFactor = 4; // Multiply by 4 to match the scale factor in your cardCreator.js
-      const centerX = (bleedCanvas.width - (previewCanvas.width)) / 2;
-      const centerY = (bleedCanvas.height - (previewCanvas.height)) / 2;
+//       // Scale the standard preview canvas to fit the bleed canvas
+//       const scaleFactor = 4; // Multiply by 4 to match the scale factor in your cardCreator.js
+//       const centerX = (bleedCanvas.width - (previewCanvas.width)) / 2;
+//       const centerY = (bleedCanvas.height - (previewCanvas.height)) / 2;
       
-      // Draw the standard card (with all your template improvements already applied)
-      bleedCtx.drawImage(previewCanvas, centerX, centerY);
+//       // Draw the standard card (with all your template improvements already applied)
+//       bleedCtx.drawImage(previewCanvas, centerX, centerY);
       
-      // Load the bleed border template
-      const borderPath = getAssetPath(`img/template/bleed/mugic.png`);
-      const borderImg = new Image();
+//       // Load the bleed border template
+//       const borderPath = getAssetPath(`img/template/bleed/mugic.png`);
+//       const borderImg = new Image();
       
-      await new Promise((resolve, reject) => {
-        borderImg.onload = resolve;
-        borderImg.onerror = reject;
-        borderImg.src = borderPath;
-      });
+//       await new Promise((resolve, reject) => {
+//         borderImg.onload = resolve;
+//         borderImg.onerror = reject;
+//         borderImg.src = borderPath;
+//       });
       
-      // Draw the bleed border on top
-      bleedCtx.drawImage(
-        borderImg, 
-        0, 0, borderImg.width, borderImg.height,
-        0, 0, bleedCanvas.width, bleedCanvas.height
-      );
+//       // Draw the bleed border on top
+//       bleedCtx.drawImage(
+//         borderImg, 
+//         0, 0, borderImg.width, borderImg.height,
+//         0, 0, bleedCanvas.width, bleedCanvas.height
+//       );
       
-      // Download logic
-      const filename = name ? 
-        `${name}${subname ? `, ${subname}` : ''}_bleed.png` : 
-        'mugic_bleed.png';
+//       // Download logic
+//       const filename = name ? 
+//         `${name}${subname ? `, ${subname}` : ''}_bleed.png` : 
+//         'mugic_bleed.png';
       
-      if (isMobileBrowser()) {
-        bleedCanvas.toBlob((blob) => {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.target = '_blank';
-          link.click();
-          setTimeout(() => URL.revokeObjectURL(url), 100);
-        }, 'image/png');
-      } else {
-        CardCreator.downloadCard(bleedCanvas, filename);
-      }
+//       if (isMobileBrowser()) {
+//         bleedCanvas.toBlob((blob) => {
+//           const url = URL.createObjectURL(blob);
+//           const link = document.createElement('a');
+//           link.href = url;
+//           link.target = '_blank';
+//           link.click();
+//           setTimeout(() => URL.revokeObjectURL(url), 100);
+//         }, 'image/png');
+//       } else {
+//         CardCreator.downloadCard(bleedCanvas, filename);
+//       }
       
-      return; // Skip remaining processing
-    }
+//       return; // Skip remaining processing
+//     }
     
-    // Helper function to check if tribe is a mixed tribe
-    const isMixedTribe = (tribeValue) => {
-      const mixedTribePatterns = [
-        // OverWorld combinations
-        'overworldunderworld', 'underworldoverworld',
-        'overworldmipedian', 'mipedianoverworld', 
-        'overworlddanian', 'danianoverworld',
-        "overworldm'arrillian", "m'arrillianoverworld",
-        'overworldtribeless', 'tribelessoverworld',
-        'overworldpanivian', 'panivianoverworld',
-        'overworldumbrian', 'umbrianoverworld',
-        'overworldfrozen', 'frozenoverworld',
+//     // Helper function to check if tribe is a mixed tribe
+//     const isMixedTribe = (tribeValue) => {
+//       const mixedTribePatterns = [
+//         // OverWorld combinations
+//         'overworldunderworld', 'underworldoverworld',
+//         'overworldmipedian', 'mipedianoverworld', 
+//         'overworlddanian', 'danianoverworld',
+//         "overworldm'arrillian", "m'arrillianoverworld",
+//         'overworldtribeless', 'tribelessoverworld',
+//         'overworldpanivian', 'panivianoverworld',
+//         'overworldumbrian', 'umbrianoverworld',
+//         'overworldfrozen', 'frozenoverworld',
         
-        // UnderWorld combinations
-        'underworldmipedian', 'mipedianunderworld',
-        'underworlddanian', 'danianunderworld', 
-        "underworldm'arrillian", "m'arrillianunderworld",
-        'underworldtribeless', 'tribelessunderworld',
-        'underworldpanivian', 'panivianunderworld',
-        'underworldumbrian', 'umbrianunderworld',
-        'underworldfrozen', 'frozenunderworld',
+//         // UnderWorld combinations
+//         'underworldmipedian', 'mipedianunderworld',
+//         'underworlddanian', 'danianunderworld', 
+//         "underworldm'arrillian", "m'arrillianunderworld",
+//         'underworldtribeless', 'tribelessunderworld',
+//         'underworldpanivian', 'panivianunderworld',
+//         'underworldumbrian', 'umbrianunderworld',
+//         'underworldfrozen', 'frozenunderworld',
         
-        // Mipedian combinations
-        'mipediandanian', 'danianmipedian',
-        "mipedianm'arrillian", "m'arrillianmipedian",
-        'mipediantribeless', 'tribelessmipedian',
-        'mipedianpanivian', 'panivianmipedian',
-        'mipedianumbrian', 'umbrianmipedian',
-        'mipedianfrozen', 'frozenmipedian',
+//         // Mipedian combinations
+//         'mipediandanian', 'danianmipedian',
+//         "mipedianm'arrillian", "m'arrillianmipedian",
+//         'mipediantribeless', 'tribelessmipedian',
+//         'mipedianpanivian', 'panivianmipedian',
+//         'mipedianumbrian', 'umbrianmipedian',
+//         'mipedianfrozen', 'frozenmipedian',
         
-        // Danian combinations
-        "danianm'arrillian", "m'arrilliandanian",
-        'daniantribeless', 'tribelessdanian',
-        'danianpanivian', 'paniviandanian',
-        'danianumbrian', 'umbriandanian',
-        'danianfrozen', 'frozendanian',
+//         // Danian combinations
+//         "danianm'arrillian", "m'arrilliandanian",
+//         'daniantribeless', 'tribelessdanian',
+//         'danianpanivian', 'paniviandanian',
+//         'danianumbrian', 'umbriandanian',
+//         'danianfrozen', 'frozendanian',
         
-        // M'arrillian combinations
-        "m'arrilliantribeless", "tribelessm'arrillian",
-        "m'arrillianpanivian", "panivianm'arrillian",
-        "m'arrillianumbrian", "umbrianm'arrillian",
-        "m'arrillianfrozen", "frozenm'arrillian",
+//         // M'arrillian combinations
+//         "m'arrilliantribeless", "tribelessm'arrillian",
+//         "m'arrillianpanivian", "panivianm'arrillian",
+//         "m'arrillianumbrian", "umbrianm'arrillian",
+//         "m'arrillianfrozen", "frozenm'arrillian",
         
-        // Tribeless combinations
-        'tribelesspanivian', 'paniviantribeless',
-        'tribelessumbrian', 'umbriantribeless',
-        'tribelessfrozen', 'frozentribeless',
+//         // Tribeless combinations
+//         'tribelesspanivian', 'paniviantribeless',
+//         'tribelessumbrian', 'umbriantribeless',
+//         'tribelessfrozen', 'frozentribeless',
         
-        // Panivian combinations
-        'panivianumbrian', 'umbrianpanivian',
-        'panivianfrozen', 'frozenpanivian',
+//         // Panivian combinations
+//         'panivianumbrian', 'umbrianpanivian',
+//         'panivianfrozen', 'frozenpanivian',
         
-        // Umbrian combinations
-        'umbrianfrozen', 'frozenumbrian'
-      ];
+//         // Umbrian combinations
+//         'umbrianfrozen', 'frozenumbrian'
+//       ];
       
-      return mixedTribePatterns.includes(tribeValue.toLowerCase());
-    };
+//       return mixedTribePatterns.includes(tribeValue.toLowerCase());
+//     };
   
-    // STANDARD PROCESSING FOR NON-MUGIC CARDS
-    // Get the standard card canvas
-    const standardCard = previewCanvas;
-    console.log(`Standard card dimensions: ${standardCard.width}x${standardCard.height}`);
+//     // STANDARD PROCESSING FOR NON-MUGIC CARDS
+//     // Get the standard card canvas
+//     const standardCard = previewCanvas;
+//     console.log(`Standard card dimensions: ${standardCard.width}x${standardCard.height}`);
     
-    // Create a new canvas for the bleed version
-    const bleedCanvas = document.createElement('canvas');
-    const bleedCtx = bleedCanvas.getContext('2d');
+//     // Create a new canvas for the bleed version
+//     const bleedCanvas = document.createElement('canvas');
+//     const bleedCtx = bleedCanvas.getContext('2d');
     
-    // Determine which border frame to use based on tribe and brainwashed status
-    let borderPath;
-    if (selectedType === 'creature' && tribe) {
-      // Check if this is a mixed tribe
-      if (isMixedTribe(tribe)) {
-        // Use mixed tribe bleed template
-        borderPath = getAssetPath(`img/template/blended bleed/${tribe.toLowerCase()}.png`);
-        console.log('Loading mixed tribe bleed border from:', borderPath);
-      } else if (brainwashed) {
-        // Use brainwashed-specific border for creatures
-        borderPath = getAssetPath(`img/template/bleed/${tribe.toLowerCase()}bw.png`);
-        console.log('Loading brainwashed bleed border from:', borderPath);
-      } else {
-        // Use tribe-specific border for normal creatures
-        borderPath = getAssetPath(`img/template/bleed/${tribe.toLowerCase()}.png`);
-        console.log('Loading normal creature bleed border from:', borderPath);
-      }
-    } else {
-      // Use a type-specific border for non-creatures (attack, battlegear, etc.)
-      borderPath = getAssetPath(`img/template/bleed/${selectedType.toLowerCase()}.png`);
-      console.log('Loading type-specific bleed border from:', borderPath);
-    }
+//     // Determine which border frame to use based on tribe and brainwashed status
+//     let borderPath;
+//     if (selectedType === 'creature' && tribe) {
+//       // Check if this is a mixed tribe
+//       if (isMixedTribe(tribe)) {
+//         // Use mixed tribe bleed template
+//         borderPath = getAssetPath(`img/template/blended bleed/${tribe.toLowerCase()}.png`);
+//         console.log('Loading mixed tribe bleed border from:', borderPath);
+//       } else if (brainwashed) {
+//         // Use brainwashed-specific border for creatures
+//         borderPath = getAssetPath(`img/template/bleed/${tribe.toLowerCase()}bw.png`);
+//         console.log('Loading brainwashed bleed border from:', borderPath);
+//       } else {
+//         // Use tribe-specific border for normal creatures
+//         borderPath = getAssetPath(`img/template/bleed/${tribe.toLowerCase()}.png`);
+//         console.log('Loading normal creature bleed border from:', borderPath);
+//       }
+//     } else {
+//       // Use a type-specific border for non-creatures (attack, battlegear, etc.)
+//       borderPath = getAssetPath(`img/template/bleed/${selectedType.toLowerCase()}.png`);
+//       console.log('Loading type-specific bleed border from:', borderPath);
+//     }
     
-    // Load the border frame image
-    const borderImg = new Image();
-    borderImg.crossOrigin = 'anonymous';
+//     // Load the border frame image
+//     const borderImg = new Image();
+//     borderImg.crossOrigin = 'anonymous';
     
-    // Wait for the border image to load
-    await new Promise((resolve, reject) => {
-      borderImg.onload = () => {
-        console.log(`Border image loaded: ${borderImg.width}x${borderImg.height}`);
-        resolve();
-      };
+//     // Wait for the border image to load
+//     await new Promise((resolve, reject) => {
+//       borderImg.onload = () => {
+//         console.log(`Border image loaded: ${borderImg.width}x${borderImg.height}`);
+//         resolve();
+//       };
       
-      borderImg.onerror = (err) => {
-        console.error('Failed to load border image:', err);
+//       borderImg.onerror = (err) => {
+//         console.error('Failed to load border image:', err);
         
-        // Try fallbacks in order
-        if (borderPath.includes('/blended bleed/')) {
-          // First fallback: try regular bleed template
-          const fallbackPath = borderPath.replace('/blended bleed/', '/bleed/');
-          console.log('Trying regular bleed fallback:', fallbackPath);
-          borderImg.src = fallbackPath;
-          borderImg.onload = resolve;
-          borderImg.onerror = () => {
-            // Second fallback: try generic border
-            const genericPath = getAssetPath('img/template/bleed/border.png');
-            console.log('Trying generic fallback:', genericPath);
-            borderImg.src = genericPath;
-            borderImg.onload = resolve;
-            borderImg.onerror = reject;
-          };
-        } else {
-          // Try a generic border as fallback
-          const genericPath = getAssetPath('img/template/bleed/border.png');
-          console.log('Trying generic fallback:', genericPath);
-          borderImg.src = genericPath;
-          borderImg.onload = resolve;
-          borderImg.onerror = reject;
-        }
-      };
+//         // Try fallbacks in order
+//         if (borderPath.includes('/blended bleed/')) {
+//           // First fallback: try regular bleed template
+//           const fallbackPath = borderPath.replace('/blended bleed/', '/bleed/');
+//           console.log('Trying regular bleed fallback:', fallbackPath);
+//           borderImg.src = fallbackPath;
+//           borderImg.onload = resolve;
+//           borderImg.onerror = () => {
+//             // Second fallback: try generic border
+//             const genericPath = getAssetPath('img/template/bleed/border.png');
+//             console.log('Trying generic fallback:', genericPath);
+//             borderImg.src = genericPath;
+//             borderImg.onload = resolve;
+//             borderImg.onerror = reject;
+//           };
+//         } else {
+//           // Try a generic border as fallback
+//           const genericPath = getAssetPath('img/template/bleed/border.png');
+//           console.log('Trying generic fallback:', genericPath);
+//           borderImg.src = genericPath;
+//           borderImg.onload = resolve;
+//           borderImg.onerror = reject;
+//         }
+//       };
       
-      borderImg.src = borderPath;
-    });
+//       borderImg.src = borderPath;
+//     });
     
-    // Set the canvas size to the border image size
-    bleedCanvas.width = borderImg.width;
-    bleedCanvas.height = borderImg.height;
+//     // Set the canvas size to the border image size
+//     bleedCanvas.width = borderImg.width;
+//     bleedCanvas.height = borderImg.height;
     
-    // Fill with white background
-    bleedCtx.fillStyle = '#ffffff';
-    bleedCtx.fillRect(0, 0, bleedCanvas.width, bleedCanvas.height);
+//     // Fill with white background
+//     bleedCtx.fillStyle = '#ffffff';
+//     bleedCtx.fillRect(0, 0, bleedCanvas.width, bleedCanvas.height);
     
-    // Fine-tuned parameters based on your feedback
-    const scaleFactor = 0.949798; // Your specified value that works for scaling
+//     // Fine-tuned parameters based on your feedback
+//     const scaleFactor = 0.949798; // Your specified value that works for scaling
     
-    // Adjust the position - positive X moves right, negative Y moves up
-    const offsetXAdjust = 1.28;    // Move right
-    const offsetYAdjust = -3.95;   // Move up
+//     // Adjust the position - positive X moves right, negative Y moves up
+//     const offsetXAdjust = 1.28;    // Move right
+//     const offsetYAdjust = -3.95;   // Move up
     
-    // Calculate base scale to fill the border
-    const scaleX = borderImg.width / standardCard.width;
-    const scaleY = borderImg.height / standardCard.height;
-    const baseScale = Math.min(scaleX, scaleY);
+//     // Calculate base scale to fill the border
+//     const scaleX = borderImg.width / standardCard.width;
+//     const scaleY = borderImg.height / standardCard.height;
+//     const baseScale = Math.min(scaleX, scaleY);
     
-    // Apply the scaling adjustment
-    const finalScale = baseScale * scaleFactor;
+//     // Apply the scaling adjustment
+//     const finalScale = baseScale * scaleFactor;
     
-    // Calculate the dimensions after scaling
-    const scaledWidth = standardCard.width * finalScale;
-    const scaledHeight = standardCard.height * finalScale;
+//     // Calculate the dimensions after scaling
+//     const scaledWidth = standardCard.width * finalScale;
+//     const scaledHeight = standardCard.height * finalScale;
     
-    // Center the card in the border with the position adjustments
-    const centerX = (borderImg.width - scaledWidth) / 2 + offsetXAdjust;
-    const centerY = (borderImg.height - scaledHeight) / 2 + offsetYAdjust;
+//     // Center the card in the border with the position adjustments
+//     const centerX = (borderImg.width - scaledWidth) / 2 + offsetXAdjust;
+//     const centerY = (borderImg.height - scaledHeight) / 2 + offsetYAdjust;
     
-    // Draw the scaled card first
-    bleedCtx.drawImage(
-      standardCard, 
-      0, 0, standardCard.width, standardCard.height, // Source rectangle
-      centerX, centerY, scaledWidth, scaledHeight     // Destination rectangle (scaled)
-    );
+//     // Draw the scaled card first
+//     bleedCtx.drawImage(
+//       standardCard, 
+//       0, 0, standardCard.width, standardCard.height, // Source rectangle
+//       centerX, centerY, scaledWidth, scaledHeight     // Destination rectangle (scaled)
+//     );
     
-    // Then draw the border on top
-    bleedCtx.drawImage(borderImg, 0, 0, bleedCanvas.width, bleedCanvas.height);
+//     // Then draw the border on top
+//     bleedCtx.drawImage(borderImg, 0, 0, bleedCanvas.width, bleedCanvas.height);
     
-    // Log the settings for debugging
-    console.log(`Using scale factor: ${scaleFactor}, Final scale: ${finalScale.toFixed(3)}`);
-    console.log(`Card position: ${centerX.toFixed(1)},${centerY.toFixed(1)} with size ${scaledWidth.toFixed(1)}x${scaledHeight.toFixed(1)}`);
+//     // Log the settings for debugging
+//     console.log(`Using scale factor: ${scaleFactor}, Final scale: ${finalScale.toFixed(3)}`);
+//     console.log(`Card position: ${centerX.toFixed(1)},${centerY.toFixed(1)} with size ${scaledWidth.toFixed(1)}x${scaledHeight.toFixed(1)}`);
     
-    // Create filename
-    const filename = name ? 
-      `${name}${subname ? `, ${subname}` : ''}_bleed.png` : 
-      'card_bleed.png';
+//     // Create filename
+//     const filename = name ? 
+//       `${name}${subname ? `, ${subname}` : ''}_bleed.png` : 
+//       'card_bleed.png';
     
-    // Download based on device type
-    if (isMobileBrowser()) {
-      // For mobile devices
-      bleedCanvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank'; // Open in new tab
-        link.click();
-        // Clean up
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-      }, 'image/png');
-    } else {
-      // Use normal download for desktop
-      CardCreator.downloadCard(bleedCanvas, filename);
-    }
+//     // Download based on device type
+//     if (isMobileBrowser()) {
+//       // For mobile devices
+//       bleedCanvas.toBlob((blob) => {
+//         const url = URL.createObjectURL(blob);
+//         const link = document.createElement('a');
+//         link.href = url;
+//         link.target = '_blank'; // Open in new tab
+//         link.click();
+//         // Clean up
+//         setTimeout(() => URL.revokeObjectURL(url), 100);
+//       }, 'image/png');
+//     } else {
+//       // Use normal download for desktop
+//       CardCreator.downloadCard(bleedCanvas, filename);
+//     }
     
-  } catch (error) {
-    console.error('Error creating bleed card:', error);
+//   } catch (error) {
+//     console.error('Error creating bleed card:', error);
     
-    // Try a simpler approach as fallback
-    try {
-      const previewCanvas = document.querySelector('#preview-canvas');
-      if (previewCanvas) {
-        const filename = name ? 
-          `${name}${subname ? `, ${subname}` : ''}_bleed.png` : 
-          'card_bleed.png';
-        CardCreator.downloadCard(previewCanvas, filename);
-        alert('Used standard card as fallback (bleed border not available)');
-      }
-    } catch (fallbackError) {
-      alert('Error creating bleed card. Check console for details.');
-    }
-  }
-};
+//     // Try a simpler approach as fallback
+//     try {
+//       const previewCanvas = document.querySelector('#preview-canvas');
+//       if (previewCanvas) {
+//         const filename = name ? 
+//           `${name}${subname ? `, ${subname}` : ''}_bleed.png` : 
+//           'card_bleed.png';
+//         CardCreator.downloadCard(previewCanvas, filename);
+//         alert('Used standard card as fallback (bleed border not available)');
+//       }
+//     } catch (fallbackError) {
+//       alert('Error creating bleed card. Check console for details.');
+//     }
+//   }
+// };
 
 // Download all cards for the currently selected type (initial support: 'location')
 const handleDownloadAllOfType = async () => {
@@ -1359,7 +1371,7 @@ return (
       {/* Card Type Selection */}
       <div className="p-4 border border-gray-700 rounded-lg bg-black">
         <div className="flex justify-center items-center gap-4">
-          <label htmlFor="type" className="font-bold">Card Type</label>
+          <label htmlFor="type" className="font-bold">{locale === 'pt' ? 'Tipo de Card' : 'Card Type'}</label>
           <select
             id="type"
             value={selectedType}
@@ -1391,12 +1403,12 @@ return (
             }}
             className="w-48 p-2 border border-gray-700 rounded bg-black text-white focus:border-[#9FE240] focus:outline-none"
           >
-            <option value="" className="text-gray-500">Select Card Type</option>
-            <option value="creature">Creature</option>
-            <option value="attack">Attack</option>
-            <option value="battlegear">Battlegear</option>
-            <option value="mugic">Mugic</option>
-            <option value="location">Location</option>
+            <option value="" className="text-gray-500">{locale === 'pt' ? 'Selecione' : 'Select Card Type'}</option>
+            <option value="creature">{locale === 'pt' ? 'Criatura' : 'Creature'}</option>
+            <option value="attack">{locale === 'pt' ? 'Ataque' : 'Attack'}</option>
+            <option value="battlegear">{locale === 'pt' ? 'Batalha' : 'Battlegear'}</option>
+            <option value="mugic">{locale === 'pt' ? 'Mugic' : 'Mugic'}</option>
+            <option value="location">{locale === 'pt' ? 'Local' : 'Location'}</option>
           </select>
         </div>
       </div>
@@ -1515,11 +1527,11 @@ return (
 
         // Then, create a sequence of re-renders with increasing delays
         setTimeout(() => {
-          setForceUpdate(prev => !prev);
+          // setForceUpdate(prev => !prev);
           
           // Second re-render after a longer delay
           setTimeout(() => {
-            setForceUpdate(prev => !prev);
+            // setForceUpdate(prev => !prev);
           }, 300);
         }, 100);
       }}
@@ -1575,9 +1587,9 @@ return (
 
         // Create re-render sequence for UI updates
         setTimeout(() => {
-          setForceUpdate(prev => !prev);
+          // setForceUpdate(prev => !prev);
           setTimeout(() => {
-            setForceUpdate(prev => !prev);
+            // setForceUpdate(prev => !prev);
           }, 300);
         }, 100);
       }}
@@ -1629,9 +1641,9 @@ return (
 
         // Create re-render sequence for UI updates
         setTimeout(() => {
-          setForceUpdate(prev => !prev);
+          // setForceUpdate(prev => !prev);
           setTimeout(() => {
-            setForceUpdate(prev => !prev);
+            // setForceUpdate(prev => !prev);
           }, 300);
         }, 100);
       }}
@@ -1689,9 +1701,9 @@ return (
 
         // Create re-render sequence for UI updates
         setTimeout(() => {
-          setForceUpdate(prev => !prev);
+          // setForceUpdate(prev => !prev);
           setTimeout(() => {
-            setForceUpdate(prev => !prev);
+            // setForceUpdate(prev => !prev);
           }, 300);
         }, 100);
       }}
@@ -1736,9 +1748,9 @@ return (
         }
 
         setTimeout(() => {
-          setForceUpdate(prev => !prev);
+          // setForceUpdate(prev => !prev);
           setTimeout(() => {
-            setForceUpdate(prev => !prev);
+            // setForceUpdate(prev => !prev);
           }, 300);
         }, 100);
       }}
@@ -1761,12 +1773,12 @@ return (
             value={tribe}
             onChange={(e) => setTribe(e.target.value)}
             options={[
-              { value: 'overworld', label: 'OverWorld' },
-              { value: 'underworld', label: 'UnderWorld' },
+              { value: 'overworld', label: locale === 'pt' ? 'OutroMundo' : 'OverWorld' },
+              { value: 'underworld', label: locale === 'pt' ? 'Submundo' : 'UnderWorld' },
               { value: 'mipedian', label: 'Mipedian' },
               { value: 'danian', label: 'Danian' },
               { value: "m'arrillian", label: "M'arrillian" },
-              { value: 'tribeless', label: 'Tribeless' },
+              { value: 'tribeless', label: locale === 'pt' ? 'Passado' : 'Tribeless' },
               { value: 'panivian', label: 'Panivian' },
               { value: 'umbrian', label: 'Umbrian' },
               { value: 'frozen', label: 'Frozen' },
@@ -1812,16 +1824,16 @@ return (
         value={tribe}
         onChange={(e) => setTribe(e.target.value)}
         options={[
-          { value: 'overworld', label: 'OverWorld' },
-          { value: 'underworld', label: 'UnderWorld' },
+          { value: 'overworld', label: locale === 'pt' ? 'OutroMundo' : 'OverWorld' },
+          { value: 'underworld', label: locale === 'pt' ? 'Submundo' : 'UnderWorld' },
           { value: 'mipedian', label: 'Mipedian' },
           { value: 'danian', label: 'Danian' },
           { value: "m'arrillian", label: "M'arrillian" },
-          { value: 'generic', label: 'Generic' },
+          { value: 'generic', label: locale === 'pt' ? 'Genérico' : 'Generic' },
           { value: 'panivian', label: 'Panivian' },
           { value: 'umbrian', label: 'Umbrian' },
           { value: 'frozen', label: 'Frozen' },
-          { value: 'custom', label: 'Custom' }
+          { value: 'custom', label: locale === 'pt' ? 'Custom' : 'Custom' }
         ]}
       />
     )}
@@ -1842,7 +1854,6 @@ return (
           label: artItem.altArtName,
         })).concat({ value: 'custom', label: 'Custom' })}
         className="hide-internal-label w-full mb-2 w-full p-2 border border-gray-700 rounded bg-black text-white focus:border-[#9FE240] focus:outline-none"
-        label={false}
       />
     )}
 
@@ -1885,7 +1896,7 @@ return (
         )}
 
         {/* Show CardArtPositioner for all card types except location */}        
-        {art && showArtPositioner && selectedType !== 'location' && (
+        {art && selectedType !== 'location' && (
           <CardArtPositioner
             art={art}
             onPositionChange={setArtPosition}
@@ -1912,7 +1923,7 @@ return (
           label="Name" 
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Card Name"
+          placeholder={locale === 'pt' ? 'Nome do Card' : 'Card Name'}
         />
         
         <InputField 
@@ -1979,7 +1990,7 @@ return (
     label="Subtype" 
     value={subtype}
     onChange={(e) => setSubtype(e.target.value)}
-    placeholder="e.g., Mirage, Past"
+    placeholder={locale === 'pt' ? 'e.g., Miragem, Passado' : 'e.g., Mirage, Past'}
   />
 )}
 
@@ -1998,7 +2009,7 @@ return (
         }}
         className="w-4 h-4 accent-[#9FE240]"
       />
-      <label htmlFor="brainwashed" className="text-white">Brainwashed</label>
+      <label htmlFor="brainwashed" className="text-white">{locale === 'pt' ? 'Lavagem Cerebral' : 'Brainwashed'}</label>
     </div>
     
     <div className="flex items-center gap-2">
@@ -2009,7 +2020,7 @@ return (
         onChange={(e) => setIsPast(e.target.checked)}
         className="w-4 h-4 accent-[#9FE240]"
       />
-      <label htmlFor="past" className="text-white">Past</label>
+      <label htmlFor="past" className="text-white">{locale === 'pt' ? 'Passado' : 'Past'}</label>
     </div>
     
     <div className="flex items-center gap-2">
@@ -2020,7 +2031,7 @@ return (
         onChange={(e) => setNoStats(e.target.checked)}
         className="w-4 h-4 accent-[#9FE240]"
       />
-      <label htmlFor="noStats" className="text-white">No Stats</label>
+      <label htmlFor="noStats" className="text-white">{locale === 'pt' ? 'Sem Status' : 'No Stats'}</label>
     </div>
   </div>
 )}
@@ -2036,9 +2047,9 @@ return (
   {/* Ability Section */}
   <div className="space-y-2">
     <div className="flex justify-between items-center">
-      <label className="font-bold">Ability</label>
+      <label className="font-bold">{locale === 'pt' ? 'Habilidade' : 'Ability'}</label>
       <span className={`text-sm ${ability.length > 350 ? 'text-red-500' : 'text-gray-400'}`}>
-        {350 - ability.length} characters remaining
+        {350 - ability.length} {locale === 'pt' ? 'caracteres restantes' : 'characters remaining'}
       </span>
     </div>
     <TextAreaWithSymbols 
@@ -2048,6 +2059,7 @@ return (
           setAbility(newValue);
         }
       }}
+      locale={locale}
     />
   </div>
 
@@ -2055,9 +2067,9 @@ return (
   {brainwashed && selectedType === 'creature' && (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <label className="font-bold">Brainwashed</label>
+        <label className="font-bold">{locale === 'pt' ? 'Lavagem Cerebral' : 'Brainwashed'}</label>
         <span className={`text-sm ${brainwashedText.length > 350 ? 'text-red-500' : 'text-gray-400'}`}>
-          {350 - brainwashedText.length} characters remaining
+          {350 - brainwashedText.length} {locale === 'pt' ? 'caracteres restantes' : 'characters remaining'}
         </span>
       </div>
       <TextAreaWithSymbols 
@@ -2068,6 +2080,7 @@ return (
           }
         }}
         allowFormatting={false}  // Disable formatting for brainwashed text
+        locale={locale}
       />
     </div>
   )}
@@ -2078,7 +2091,7 @@ return (
     <div className="flex justify-between items-center">
       <label className="font-bold">Flavor Text</label>
       <span className={`text-sm ${flavorText.length > 200 ? 'text-red-500' : 'text-gray-400'}`}>
-        {200 - flavorText.length} characters remaining
+        {200 - flavorText.length} {locale === 'pt' ? 'caracteres restantes' : 'characters remaining'}
       </span>
     </div>
     <div className="border border-gray-700 rounded bg-black hover:border-[#9FE240] focus-within:border-[#9FE240] transition-colors">
@@ -2146,7 +2159,7 @@ return (
     <div className="flex flex-wrap items-center justify-center gap-4 pt-0 border-gray-700">
         {/* Unique checkbox always visible */}
         <div className="flex items-center gap-2">
-            <label className="font-bold">Única</label>
+            <label className="font-bold">{locale === 'pt' ? 'Única' : 'Unique'}</label>
             <input 
                 type="checkbox" 
                 checked={unique}
@@ -2159,7 +2172,7 @@ return (
         {!brainwashed && (
             <>
                 <div className="flex items-center gap-2">
-                    <label className="font-bold">Lendário</label>
+                    <label className="font-bold">{locale === 'pt' ? 'Lendário' : 'Legendary'}</label>
                     <input 
                         type="checkbox" 
                         checked={legendary}
@@ -2169,7 +2182,7 @@ return (
                 </div>
                 
                 <div className="flex items-center gap-2">
-                    <label className="font-bold">Leal</label>
+                    <label className="font-bold">{locale === 'pt' ? 'Leal' : 'Loyal'}</label>
                     <input 
                         type="checkbox" 
                         checked={loyal}
@@ -2195,7 +2208,7 @@ return (
         <>
             {selectedType === 'mugic' && (
                 <div className="flex items-center gap-2">
-                    <label className="font-bold">Mugic Cost</label>
+                    <label className="font-bold">{locale === 'pt' ? 'Custo Mugic' : 'Mugic Cost'}</label>
                     <input 
                         type="text"
                         value={mugicCost}
@@ -2210,11 +2223,11 @@ return (
                         maxLength={1}
                         className="w-16 p-2 border border-gray-700 rounded bg-black text-white focus:border-[#9FE240] focus:outline-none text-center"
                     />
-                    <span className="text-gray-400 text-xs">Enter 0-9 or X</span>
+                    <span className="text-gray-400 text-xs">{locale === 'pt' ? 'Digite 0-9 ou X' : 'Enter 0-9 or X'}</span>
                 </div>
             )}
             <div className="flex items-center gap-2">
-                <label className="font-bold">Única</label>
+                <label className="font-bold">{locale === 'pt' ? 'Única' : 'Unique'}</label>
                 <input 
                     type="checkbox" 
                     checked={unique}
@@ -2227,12 +2240,12 @@ return (
     
 <div className="flex flex-col gap-1">
     <div className="flex items-center gap-2">
-        <label className="font-bold">Artist</label>
+        <label className="font-bold">{locale === 'pt' ? 'Artista' : 'Artist'}</label>
         <input 
             type="text"
             value={artist}
             onChange={(e) => setArtist(e.target.value)}
-            placeholder="Artist"
+            placeholder={locale === 'pt' ? 'Artista' : 'Artist'}
             className="w-48 p-2 border border-gray-700 rounded bg-black text-white focus:border-[#9FE240] focus:outline-none"
         />
     </div>
@@ -2240,7 +2253,7 @@ return (
 
 <div className="flex flex-col gap-1">
     <div className="flex items-center gap-2">
-        <label className="font-bold">Serial #</label>
+        <label className="font-bold">{locale === 'pt' ? 'Número de Série' : 'Serial #'}</label>
         <input 
             type="text"
             value={serialNumber}
@@ -2347,7 +2360,7 @@ return (
         past: isPast,
         showCopyright,
         showArtist,
-        useBleedTemplates: true,
+        useBleedTemplates: false, // Disable bleed templates for now
         customColor: customColor,
         tribeLogo: tribeLogo,
         initiative: initiative,
@@ -2381,22 +2394,22 @@ return (
     <div className="flex justify-center gap-4 flex-wrap">
       {selectedType === 'creature' && (
         <div className="flex flex-col items-center gap-2 w-full">
-          <label className="text-sm text-gray-400">Tribe for ZIP</label>
+          <label className="text-sm text-gray-400">{locale === 'pt' ? 'Baixar por Tribo' : 'Tribe for ZIP'}</label>
           <select
             value={batchTribeFilter}
             onChange={(e) => setBatchTribeFilter(e.target.value)}
             className="w-40 p-2 border border-gray-700 rounded bg-black text-white focus:border-[#9FE240] focus:outline-none"
           >
-            <option value="all">All Tribes</option>
-            <option value="overworld">OverWorld</option>
-            <option value="underworld">UnderWorld</option>
-            <option value="mipedian">Mipedian</option>
-            <option value="danian">Danian</option>
-            <option value="m'arrillian">M'arrillian</option>
-            <option value="tribeless">Tribeless</option>
-            <option value="panivian">Panivian</option>
-            <option value="umbrian">Umbrian</option>
-            <option value="frozen">Frozen</option>
+            <option value="all">{locale === 'pt' ? 'Todas as Tribos' : 'All Tribes'}</option>
+            <option value="overworld">{locale === 'pt' ? 'OutroMundo' : 'OverWorld'}</option>
+            <option value="underworld">{locale === 'pt' ? 'Submundo' : 'UnderWorld'}</option>
+            <option value="mipedian">{locale === 'pt' ? 'Mipedian' : 'Mipedian'}</option>
+            <option value="danian">{locale === 'pt' ? 'Danian' : 'Danian'}</option>
+            <option value="m'arrillian">{locale === 'pt' ? "M'arrillian" : "M'arrillian"}</option>
+            <option value="tribeless">{locale === 'pt' ? 'Passado' : 'Tribeless'}</option>
+            <option value="panivian">{locale === 'pt' ? 'Panivian' : 'Panivian'}</option>
+            <option value="umbrian">{locale === 'pt' ? 'Umbrian' : 'Umbrian'}</option>
+            <option value="frozen">{locale === 'pt' ? 'Gelado' : 'Frozen'}</option>
           </select>
           <label className="flex items-center gap-2 text-sm text-gray-400">
             <input
@@ -2405,7 +2418,7 @@ return (
               onChange={(e) => setBatchEmptyStats(e.target.checked)}
               className="w-4 h-4 accent-[#9FE240]"
             />
-            Empty stats
+            {locale === 'pt' ? 'Sem Status' : 'Empty stats'}
           </label>
           <label className="flex items-center gap-2 text-sm text-gray-400">
             <input
@@ -2414,7 +2427,7 @@ return (
               onChange={(e) => setBatchUnofficialsIncluded(e.target.checked)}
               className="w-4 h-4 accent-[#9FE240]"
             />
-            Unofficials Included
+            {locale === 'pt' ? 'Incluir Não Oficiais' : 'Unofficials Included'}
           </label>
         </div>
       )}
@@ -2422,19 +2435,21 @@ return (
         onClick={handleDownload}
         className="px-6 py-2 bg-[#9FE240] text-black font-bold rounded hover:bg-[#8FD230] transition-colors"
       >
-        Download Standard
+        {/* Download Standard */}
+        {locale === 'pt' ? 'Baixar' : 'Download'}
       </button>
-      <button 
+      {/* <button 
         onClick={handleBleedDownload}
         className="px-6 py-2 bg-[#FF9933] text-black font-bold rounded hover:bg-[#FF8822] transition-colors"
       >
         Download with Bleed
-      </button>
+      </button> */}
       <button
         onClick={handleDownloadAllOfType}
         className="px-6 py-2 bg-[#4DA6FF] text-black font-bold rounded hover:bg-[#3B95EE] transition-colors"
       >
-        Download Each Card (ZIP)
+        {/* Download Each Card (ZIP) */}
+        {locale === 'pt' ? 'Baixar Todos' : 'Download All'}
       </button>
     </div>
   </div>
@@ -2448,7 +2463,7 @@ return (
         {/* Add the preset selector for mobile */}
         <div className="p-3 border-b border-gray-700">
           <div className="flex items-center justify-between">
-            <label className="font-bold text-white text-sm">Stats Preset:</label>
+            <label className="font-bold text-white text-sm">{locale === 'pt' ? 'Preset de Status' : 'Stats Preset:'}</label>
             <div className="flex items-center gap-2">
               <select
                 value={statsPreset}
@@ -2479,8 +2494,8 @@ return (
                 <option value="max">Max</option>
                 <option value="mid">Mid</option>
                 <option value="min">Min</option>
-                <option value="random">Random</option>
-                <option value="empty">Empty</option>
+                <option value="random">{locale === 'pt' ? 'Aleatório' : 'Random'}</option>
+                <option value="empty">{locale === 'pt' ? 'Vazio' : 'Empty'}</option>
               </select>
               
               {statsPreset === 'random' && (
@@ -2536,7 +2551,7 @@ return (
        <div className="w-full max-w-xs mx-auto bg-black border border-gray-700 rounded-lg mt-3 mb-2 p-2">
         <div className="flex items-center justify-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="font-bold text-white">Stats Preset:</label>
+            <label className="font-bold text-white">{locale === 'pt' ? 'Preset de Status' : 'Stats Preset:'}</label>
             <select
               value={statsPreset}
               onChange={(e) => {
@@ -2573,8 +2588,8 @@ return (
               <option value="max">Max</option>
               <option value="mid">Mid</option>
               <option value="min">Min</option>
-              <option value="random">Random</option>
-              <option value="empty">Empty</option>
+              <option value="random">{locale === 'pt' ? 'Aleatório' : 'Random'}</option>
+              <option value="empty">{locale === 'pt' ? 'Vazio' : 'Empty'}</option>
             </select>
           </div>
           
@@ -2628,22 +2643,26 @@ return (
   <div className="flex justify-center gap-4 mt-5 flex-wrap">
     {selectedType === 'creature' && (
       <div className="flex flex-col items-center gap-2 w-full">
-        <label className="text-sm text-gray-400">Tribe for ZIP</label>
+        <label className="text-sm text-gray-400">
+          {locale === 'pt' ? 'Baixar por Tribo' : 'Tribe for ZIP'}
+        </label>
         <select
           value={batchTribeFilter}
           onChange={(e) => setBatchTribeFilter(e.target.value)}
           className="w-40 p-2 border border-gray-700 rounded bg-black text-white focus:border-[#9FE240] focus:outline-none"
         >
-          <option value="all">All Tribes</option>
+          <option value="all">
+            {locale === 'pt' ? 'Todas as Tribos' : 'All Tribes'}
+          </option>
           <option value="overworld">OverWorld</option>
           <option value="underworld">UnderWorld</option>
           <option value="mipedian">Mipedian</option>
           <option value="danian">Danian</option>
           <option value="m'arrillian">M'arrillian</option>
           <option value="tribeless">Tribeless</option>
-          <option value="panivian">Panivian</option>
+          {/* <option value="panivian">Panivian</option>
           <option value="umbrian">Umbrian</option>
-          <option value="frozen">Frozen</option>
+          <option value="frozen">Frozen</option> */}
         </select>
         <label className="flex items-center gap-2 text-sm text-gray-400">
           <input
@@ -2652,36 +2671,38 @@ return (
             onChange={(e) => setBatchEmptyStats(e.target.checked)}
             className="w-4 h-4 accent-[#9FE240]"
           />
-          Empty stats
+          {locale === 'pt' ? 'Sem Status' : 'Empty Stats'}
         </label>
-        <label className="flex items-center gap-2 text-sm text-gray-400">
+        {/* <label className="flex items-center gap-2 text-sm text-gray-400">
           <input
             type="checkbox"
             checked={batchUnofficialsIncluded}
             onChange={(e) => setBatchUnofficialsIncluded(e.target.checked)}
             className="w-4 h-4 accent-[#9FE240]"
-          />
-          Unofficials Included
-        </label>
+            />
+            {locale === 'pt' ? 'Inclui Não Oficiais' : 'Unofficials Included'}
+        </label> */}
       </div>
     )}
     <button 
       onClick={handleDownload}
       className="px-6 py-2 bg-[#9FE240] text-black font-bold rounded hover:bg-[#8FD230] transition-colors"
     >
-      Download Standard
+      {/* Download Standard */}
+        {locale === 'pt' ? 'Baixar' : 'Download'}
     </button>
-    <button 
+    {/* <button 
       onClick={handleBleedDownload}
       className="px-6 py-2 bg-[#FF9933] text-black font-bold rounded hover:bg-[#FF8822] transition-colors"
     >
       Download with Bleed
-    </button>
+    </button> */}
     <button
       onClick={handleDownloadAllOfType}
       className="px-6 py-2 bg-[#4DA6FF] text-black font-bold rounded hover:bg-[#3B95EE] transition-colors"
     >
-      Download All (ZIP)
+      {/* Download All (ZIP) */}
+      {locale === 'pt' ? 'Baixar Tudo' : 'Download All'}
     </button>
   </div>
 )}
@@ -2694,13 +2715,19 @@ return (
       onClick={handleDownload}
       className="w-1/2 px-6 py-2 bg-[#9FE240] text-black font-bold rounded hover:bg-[#8FD230] transition-colors"
     >
-      Standard
+      {locale === 'pt' ? 'Baixar' : 'Download'}
     </button>
-    <button
+    {/* <button
       onClick={handleBleedDownload}
       className="w-1/2 px-6 py-2 bg-[#FF9933] text-black font-bold rounded hover:bg-[#FF8822] transition-colors"
     >
       With Bleed
+    </button> */}
+    <button
+      onClick={handleDownloadAllOfType}
+      className="w-1/2 px-6 py-2 bg-[#4DA6FF] text-black font-bold rounded hover:bg-[#3B95EE] transition-colors"
+    >
+      {locale === 'pt' ? 'Baixar Tudo' : 'Download All'}
     </button>
   </div>
 </div>

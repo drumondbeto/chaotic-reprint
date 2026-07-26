@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useLocale } from '../../../app/LocaleContext';
 import { CardCreator } from '../utils/cardCreator';
 import { getAssetPath } from '../utils/assetPaths';
 
 const CardPreview = ({ cardData }) => {
+  const { locale } = useLocale();
   const containerRef = useRef(null);
   const [error, setError] = useState(null);
-
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -163,9 +164,9 @@ const CardPreview = ({ cardData }) => {
     if (error) {
       return (
         <div className="text-red-400 text-center p-8 border-2 border-dashed border-red-700 rounded-lg">
-          <div className="text-xl mb-2">Error Loading Preview</div>
+          <div className="text-xl mb-2">{locale == 'pt' ? 'Erro ao Carregar Visualização' : 'Error Loading Preview'}</div>
           <div className="text-sm">{error}</div>
-          <div className="text-xs mt-2">Check console for more details</div>
+          <div className="text-xs mt-2">{locale == 'pt' ? 'Verifique o console para mais detalhes' : 'Check console for more details'}</div>
         </div>
       );
     }
@@ -173,8 +174,8 @@ const CardPreview = ({ cardData }) => {
     if (!cardData.selectedType) {
       return (
         <div className="text-gray-400 text-center p-8 border-2 border-dashed border-gray-700 rounded-lg">
-          <div className="text-xl mb-2">Card Preview</div>
-          <div className="text-sm">Select a card type to begin</div>
+          <div className="text-xl mb-2">{locale == 'pt' ? 'Visualização de Card' : 'Card Preview'}</div>
+          <div className="text-sm">{locale == 'pt' ? 'Selecione um tipo de card para começar' : 'Select a card type to begin'}</div>
         </div>
       );
     }
@@ -183,9 +184,9 @@ const CardPreview = ({ cardData }) => {
       return (
         <div className="text-gray-400 text-center p-8 border-2 border-dashed border-gray-700 rounded-lg">
           <div className="text-xl mb-2">
-            {cardData.selectedType.charAt(0).toUpperCase() + cardData.selectedType.slice(1)} Preview
+              {locale == 'pt' ? 'Visualização de ' + cardData.selectedType.charAt(0).toUpperCase() + cardData.selectedType.slice(1) + 's' : cardData.selectedType.charAt(0).toUpperCase() + cardData.selectedType.slice(1) + ' Preview'}
           </div>
-          <div className="text-sm">Select a tribe to begin</div>
+          <div className="text-sm">{locale == 'pt' ? 'Selecione uma tribo para começar' : 'Select a tribe to begin'}</div>
         </div>
       );
     }

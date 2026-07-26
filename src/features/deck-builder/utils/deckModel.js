@@ -2,7 +2,7 @@
 // A deck looks like:
 // {
 //   id, name, description, createdAt, updatedAt,
-//   cards: [ { type, uniqueId, name, subname, set, quantity } ]
+//   cards: [ { type, id, name, subname, set, quantity } ]
 // }
 
 export const CARD_TYPES = ['creature', 'attack', 'location', 'battlegear', 'mugic'];
@@ -14,7 +14,7 @@ function generateId() {
   return `deck-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export function createEmptyDeck(name = 'Novo Deck') {
+export function createEmptyDeck(name = locale == 'pt' ? 'Novo Deck' : 'New Deck') {
   const now = new Date().toISOString();
   return {
     id: generateId(),
@@ -38,20 +38,20 @@ export function cloneDeckAsNew(deck, name) {
   };
 }
 
-function findCardIndex(deck, type, uniqueId) {
-  return deck.cards.findIndex(card => card.type === type && card.uniqueId === uniqueId);
+function findCardIndex(deck, type, id) {
+  return deck.cards.findIndex(card => card.type === type && card.id === id);
 }
 
 export function addCardToDeck(deck, card, quantity = 1) {
   const cards = deck.cards.slice();
-  const index = findCardIndex(deck, card.type, card.uniqueId);
+  const index = findCardIndex(deck, card.type, card.id);
 
   if (index >= 0) {
     cards[index] = { ...cards[index], quantity: cards[index].quantity + quantity };
   } else {
     cards.push({
       type: card.type,
-      uniqueId: card.uniqueId,
+      id: card.id,
       name: card.name,
       subname: card.subname || '',
       set: card.set || '',
@@ -62,18 +62,18 @@ export function addCardToDeck(deck, card, quantity = 1) {
   return { ...deck, cards, updatedAt: new Date().toISOString() };
 }
 
-export function setCardQuantity(deck, type, uniqueId, quantity) {
+export function setCardQuantity(deck, type, id, quantity) {
   if (quantity <= 0) {
-    return removeCardFromDeck(deck, type, uniqueId);
+    return removeCardFromDeck(deck, type, id);
   }
   const cards = deck.cards.map(card =>
-    card.type === type && card.uniqueId === uniqueId ? { ...card, quantity } : card
+    card.type === type && card.id === id ? { ...card, quantity } : card
   );
   return { ...deck, cards, updatedAt: new Date().toISOString() };
 }
 
-export function removeCardFromDeck(deck, type, uniqueId) {
-  const cards = deck.cards.filter(card => !(card.type === type && card.uniqueId === uniqueId));
+export function removeCardFromDeck(deck, type, id) {
+  const cards = deck.cards.filter(card => !(card.type === type && card.id === id));
   return { ...deck, cards, updatedAt: new Date().toISOString() };
 }
 
