@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/chaotic-tcg-proxy-generator/static/css/main.067f9cb1.css",
-    "main.js": "/chaotic-tcg-proxy-generator/static/js/main.d629ef7e.js",
+    "main.js": "/chaotic-tcg-proxy-generator/static/js/main.eefac02e.js",
     "static/js/453.a5259da1.chunk.js": "/chaotic-tcg-proxy-generator/static/js/453.a5259da1.chunk.js",
     "static/media/Roboto-Bold.ttf": "/chaotic-tcg-proxy-generator/static/media/Roboto-Bold.c13d0c4f45623629e371.ttf",
     "static/media/arial-narrow-italic.ttf": "/chaotic-tcg-proxy-generator/static/media/arial-narrow-italic.465dc0649679f65097f5.ttf",
@@ -17,11 +17,11 @@
     "static/media/Eurostile Cond Heavy Italic.ttf": "/chaotic-tcg-proxy-generator/static/media/Eurostile Cond Heavy Italic.ab58fd6ff2a110ff0fab.ttf",
     "index.html": "/chaotic-tcg-proxy-generator/index.html",
     "main.067f9cb1.css.map": "/chaotic-tcg-proxy-generator/static/css/main.067f9cb1.css.map",
-    "main.d629ef7e.js.map": "/chaotic-tcg-proxy-generator/static/js/main.d629ef7e.js.map",
+    "main.eefac02e.js.map": "/chaotic-tcg-proxy-generator/static/js/main.eefac02e.js.map",
     "453.a5259da1.chunk.js.map": "/chaotic-tcg-proxy-generator/static/js/453.a5259da1.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.067f9cb1.css",
-    "static/js/main.d629ef7e.js"
+    "static/js/main.eefac02e.js"
   ]
 }
