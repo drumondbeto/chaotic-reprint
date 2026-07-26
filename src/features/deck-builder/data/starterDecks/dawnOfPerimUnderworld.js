@@ -42,7 +42,7 @@ const cards = [
 
 const dawnOfPerimUnderworld = {
   id: 'starter-dawn-of-perim-underworld',
-  title: 'Dawn of Perim - Underworld',
+  title: 'DOP - Underworld',
   cards
 };
 

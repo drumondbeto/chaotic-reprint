@@ -2393,7 +2393,7 @@ return (
     </div>
     <div className="flex justify-center gap-4 flex-wrap">
       {selectedType === 'creature' && (
-        <div className="flex flex-col items-center gap-2 w-full">
+        <div className="flex flex-col items-center gap-2 w-full mb-24">
           <label className="text-sm text-gray-400">{locale === 'pt' ? 'Baixar por Tribo' : 'Tribe for ZIP'}</label>
           <select
             value={batchTribeFilter}
@@ -2457,7 +2457,7 @@ return (
 
 {/* Stats Section - Mobile Only */}
 {!noStats && (
-  <div className="lg:hidden flex flex-col mb-24 mt-4">
+  <div className="lg:hidden flex flex-col mt-4">
     {selectedType === 'creature' && (
       <div className="w-full bg-black border border-gray-700 rounded-lg mb-4">
         {/* Add the preset selector for mobile */}
@@ -2642,7 +2642,7 @@ return (
 {selectedType && selectedType !== 'attack' && (
   <div className="flex justify-center gap-4 mt-5 flex-wrap">
     {selectedType === 'creature' && (
-      <div className="flex flex-col items-center gap-2 w-full">
+      <div className="flex flex-col items-center gap-2 w-full mb-24">
         <label className="text-sm text-gray-400">
           {locale === 'pt' ? 'Baixar por Tribo' : 'Tribe for ZIP'}
         </label>
