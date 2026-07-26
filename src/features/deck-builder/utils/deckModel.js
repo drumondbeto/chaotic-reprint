@@ -14,7 +14,7 @@ function generateId() {
   return `deck-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export function createEmptyDeck(name = locale == 'pt' ? 'Novo Deck' : 'New Deck') {
+export function createEmptyDeck(name = 'Novo Deck') {
   const now = new Date().toISOString();
   return {
     id: generateId(),
