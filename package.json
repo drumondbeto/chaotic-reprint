@@ -1,8 +1,8 @@
 {
-  "name": "chaotic-tcg-proxy-generator",
+  "name": "chaotic-recode",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://drumondbeto.github.io/chaotic-tcg-proxy-generator/",
+  "homepage": "https://drumondbeto.github.io/chaotic-recode/",
   "dependencies": {
     "@headlessui/react": "^2.2.10",
     "@testing-library/jest-dom": "^5.17.0",
