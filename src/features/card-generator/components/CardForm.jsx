@@ -879,7 +879,7 @@ const generateRandomStats = (maxStats) => {
           await new Promise((resolve, reject) => {
             img.onload = resolve;
             img.onerror = reject;
-            img.src = path ?? `/chaotic-recode/img/icons/${element}.png`;
+            img.src = path ?? `/chaotic-reprint/img/icons/${element}.png`;
           });
           loadedImages[element] = true;
         } catch (error) {

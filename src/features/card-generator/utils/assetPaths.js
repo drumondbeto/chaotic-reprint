@@ -10,11 +10,11 @@ const getAssetBasePath = () => {
   // Determine the base path based on environment
   let basePath;
   if (isGitHubPages) {
-    basePath = '/chaotic-recode';
+    basePath = '/chaotic-reprint';
   } else if (isDevelopment) {
-    basePath = '/chaotic-recode';  // Changed this to match GitHub Pages path
+    basePath = '/chaotic-reprint';  // Changed this to match GitHub Pages path
   } else {
-    basePath = '/chaotic-recode';  // Default to same path
+    basePath = '/chaotic-reprint';  // Default to same path
   }
   
   return basePath;
